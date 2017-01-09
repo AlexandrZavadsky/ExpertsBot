@@ -72,6 +72,9 @@ namespace ExpertBot
                 case "/vote":
                     Vote(message);
                     return;
+                case "/poll":                    
+                    Poll(message);
+                    return;
                 case "/help":
                     Help(message);
                     return;
@@ -116,17 +119,27 @@ namespace ExpertBot
             if (string.Equals(parameters[1], "no", StringComparison.OrdinalIgnoreCase))
             {
                 voters.Add(new Vote { User = message.From.FirstName, Value = false });
-                if (voters.Count(vote => vote.Value) == VotesNeeded-1)
+                if (voters.Count(vote => !vote.Value) == VotesNeeded-1)
                 {
                     cancellationToken.Cancel();
                     SendMessage(message.Chat.Id,
-                        $"new title 'Эксперт по {newTitle.Value}' was provided for expert {newTitle.Key}");
+                        $"new title 'Эксперт по {newTitle.Value}' was rejected for expert {newTitle.Key}");
                     ClearPoll();
                     return;
                 }
                 SendMessage(message.Chat.Id,
                 $"{message.From.FirstName} voted to reject title 'Эксперт по {newTitle.Value}' for {newTitle.Key}\n {VotesNeeded - voters.Count(vote => vote.Value)} more votes needed to approve title");
             }
+        }
+
+        private void Poll(Message message)
+        {
+            if (!isPollEnabled)
+            {
+                SendMessage(message.Chat.Id, "there are no active polls");
+                return;
+            }
+            SendMessage(message.Chat.Id, $"current poll is for new title 'Эксперт по {newTitle.Value}' for expert {newTitle.Key}");
         }
 
         private void Help(Message message)
@@ -136,7 +149,8 @@ namespace ExpertBot
                         "/help - show all commands\n" +
                         "/add_expert - add new title for expert(usage: add_expert [expert name] [title])\n" +
                         $"expert names: {string.Join(" ", Experts.Keys)}\n" +
-                        "/vote - vote for title(usage: /vote [yes/no])";
+                        "/vote - vote for title(usage: /vote [yes/no])" +
+                        "/poll - see current poll information";
 
             Bot.SendTextMessageAsync(message.Chat.Id, usage, replyMarkup: new ReplyKeyboardHide());
         }

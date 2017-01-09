@@ -14,7 +14,6 @@ namespace ExpertBot
 
             ConfigureServices(serviceCollection);
 
-            // Application application = new Application(serviceCollection);
             IServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
 
             var proccessor = serviceProvider.GetService<BotProccessor>();
